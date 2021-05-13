@@ -17,6 +17,7 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.data.statistics.HistogramDataset;
 
 class BenfordsLawAssignment{
+
     public static void main(String[] args){
         Scanner reader = new Scanner(System.in);
         Double frequencyArray[] = {30.1, 17.6, 12.5, 9.7, 7.9, 6.7, 5.8, 5.1, 4.0};
@@ -67,21 +68,26 @@ class BenfordsLawAssignment{
     public static void readFile(String readFile){
         try{
             String line;
+            String[] salesData = new String[getLength(readFile)];   // new final salesData array, calls getLength to find out the length of csv file
+            String[] tempData;
             BufferedReader br = new BufferedReader(new FileReader(readFile));   // FileReader opens csv file
+            int j = 0; // used to store index of salesData
             while ((line = br.readLine())!= null){     // read file line by line until end of file
-                String[] salesData = line.split(",");  // store data in array, and split strings given comma delimiter
-                for (int i = 0; i < salesData.length; i++ ){ 
-                    System.out.println(salesData[i]);
+                tempData = line.split(",");  // store data in array, and split strings given comma delimiter
+                for (int i = 0; i < tempData.length; i++){ 
+                    salesData[j] = tempData[i]; // stores tempData into salesData
+                    j++;
                 }
                 
             }
-            System.out.println("\nFinished reading file.");
+            System.out.println("\nFinished reading " + readFile + ".\n");
             br.close();
-            
+
+            benfordsLaw(salesData);
         }
 
         catch (IOException e) { 
-            System.out.println("Error reading file.");
+            System.out.println("Error reading " + readFile + ".\n");
         }
     } 
     /**
@@ -109,11 +115,11 @@ class BenfordsLawAssignment{
             br.write(sb.toString());  // write data to file  
             br.close();              // close writer 
 
-            System.out.println("Finished writing to file.");  
+            System.out.println("Finished writing to " + writeFile + ".\n");  
         }
 
         catch (IOException e){
-            System.out.println("Error writing to file."); 
+            System.out.println("Error writing to " + writeFile + ".\n"); 
         }
 
         /** file ouput example: 
@@ -132,6 +138,46 @@ class BenfordsLawAssignment{
      */
     public static void generateGraph(String[] salesData) {
         
+    }
+    /**
+     * Calculates fraud within inputted data by comparing frequency of first digits.
+     * <p>
+     * Uses iteration between for-loops to iterate between indicies in the given salesData array, 
+     * and then compares char types with the ascii values of digits between 1 and 9.
+     * 
+     * @param salesData
+     * @author Vincent Tran
+     */
+    public static void benfordsLaw(String[] salesData) {
+        int[] rawFrequencies = new int[9];
+        Double[] dataFrequencies = new Double[9]; // array containing 1, 2, 3, 4, 5, 6, 7, 8, 9 place holders
+        double sum = 0.0;    // used to keep track oaf sum of all first nums occurances.
+        // for loop that iterates through all indicies within salesData
+        for (int i = 0; i < salesData.length; i++) {
+            // for loop used to check for first-integer frequency
+            for (int j = 0; j < 9; j++){
+                if (salesData[i].charAt(0) == j+49) {   // compares chars. 49 is added to convert j to ascii code of atleast 1, which when iterated should give values between 1 and 9.
+                    rawFrequencies[j]++;   // increments accordingly to keep track of number frequency.
+                    sum++; // increments sum everytime a first-number occurs.
+                }
+            }
+        }
+        
+        // for loop that iterates through digits 0 and 8, to then index and print frequency percentage
+        for (int i = 0; i < 9; i++) {
+            dataFrequencies[i] = (rawFrequencies[i]/sum)*100;   // gets 
+            System.out.format(i + ": %.2f%%\n", dataFrequencies[i]);
+        }
+
+        // compares first digit frequency to see if fraudulent.
+        if (dataFrequencies[0] > 29 && dataFrequencies[0] < 32) {
+            System.out.println("FRAUDULENT DATA: Unlikely\n");
+        }
+        else {
+            System.out.println("FRAUDULENT DATA: Likely\n");
+        }
+
+        generateCSVFile(dataFrequencies, "result.csv");
     }
 
     /**
@@ -161,5 +207,23 @@ class BenfordsLawAssignment{
         }
         System.out.println("ERROR: This file does not exist, or is not a CSV.");
         return false;
+    }
+
+    /**
+     * Gets the maximum length of provided file.
+     * 
+     * @author Vincent Tran
+     * @param readFile
+     * @return
+     * @throws IOException
+     */
+    public static int getLength(String readFile) throws IOException {
+        int length = 0;
+        BufferedReader br = new BufferedReader(new FileReader(readFile));
+        while ((br.readLine())!= null){     // read file line by line until end of file
+            length++;
+        }
+        br.close();
+        return length*2;
     }
 }
